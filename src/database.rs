@@ -3,15 +3,15 @@ use std::fs::File;
 use std::io::{Error, Write};
 use chrono::{Local};
 use std::mem::replace;
-use crate::models;
+use crate::models::{Task, Status};
 
-fn read_file() -> Result<Vec<models::Task>, Error> {
+fn read_file() -> Result<Vec<Task>, Error> {
     let string_data: String = fs::read_to_string("database.json")?;
-    let task_list: Vec<models::Task> = serde_json::from_str(&string_data)?;
+    let task_list: Vec<Task> = serde_json::from_str(&string_data)?;
     Ok(task_list)
 }
 
-fn create_database_for_task(task: models::Task) -> Result<(), Error> {
+fn create_database_for_task(task: Task) -> Result<(), Error> {
     let mut file = File::create("database.json")?;
 
     let task_list = vec![task];
@@ -21,7 +21,7 @@ fn create_database_for_task(task: models::Task) -> Result<(), Error> {
     Ok(())
 }
 
-fn update_database(task_list: &Vec<models::Task>) -> Result<(), Error> {
+fn update_database(task_list: &Vec<Task>) -> Result<(), Error> {
     let mut file = File::create("database.json")?;
     let task_data = serde_json::to_string(&task_list)?;
     file.write_all(task_data.as_bytes())
@@ -30,10 +30,10 @@ fn update_database(task_list: &Vec<models::Task>) -> Result<(), Error> {
 pub fn create_task(description: &String) -> Result<(), Error> {
     match read_file() {
         Ok(mut task_list) => {
-            let task = models::Task {
+            let task = Task {
                 id: (task_list.iter().count() as u32)+1,
                 description: description.clone(),
-                status: models::Status::Todo,
+                status: Status::Todo,
                 created_at: Local::now().to_utc(),
                 updated_at: Local::now().to_utc()
             };
@@ -44,10 +44,10 @@ pub fn create_task(description: &String) -> Result<(), Error> {
         }
         Err(error) => {
             print!("An error occurred while trying to add a task: {error}\nWe will create the database instead");
-            let task = models::Task {
+            let task = Task {
                 id: 1,
                 description: description.clone(),
-                status: models::Status::Todo,
+                status: Status::Todo,
                 created_at: Local::now().to_utc(),
                 updated_at: Local::now().to_utc()
             };
@@ -57,7 +57,7 @@ pub fn create_task(description: &String) -> Result<(), Error> {
     }
 }
 
-pub fn read_task_list(status: Option<models::Status>) -> Result<Vec<models::Task>, Error> {
+pub fn read_task_list(status: Option<Status>) -> Result<Vec<Task>, Error> {
     let task_list = read_file()?;
     match status {
         Some(status) => {
@@ -73,7 +73,7 @@ pub fn read_task_list(status: Option<models::Status>) -> Result<Vec<models::Task
     }
 }
 
-pub fn update_task(task: models::Task) -> Result<(), Error> {
+pub fn update_task(task: Task) -> Result<(), Error> {
     let index = task.index();
     let mut task_list = read_task_list(None)?;
     let _ = replace(&mut  task_list[index], task);

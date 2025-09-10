@@ -1,16 +1,17 @@
 mod database;
 pub mod models;
 
-use std::env;
+use chrono::Local;
 use comfy_table::Table;
-use chrono::{Local};
+use models::{Action, Status, Task};
+use std::env;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let action_string = args.get(1);
 
     if let Some(action_string) = action_string {
-        if let Some(action) = models::Action::action_from_str(action_string) {
+        if let Some(action) = Action::action_from_str(action_string) {
             handle_action(action);
         } else {
             println!("No action found");
@@ -20,13 +21,13 @@ fn main() {
     }
 }
 
-fn handle_action(action: models::Action) {
+fn handle_action(action: Action) {
     match action {
-        models::Action::Add => add_task(),
-        models::Action::Update => update_task(),
-        models::Action::Delete => delete_task(),
-        models::Action::List => list_task(),
-        models::Action::Mark(status) => mark_as(status),
+        Action::Add => add_task(),
+        Action::Update => update_task(),
+        Action::Delete => delete_task(),
+        Action::List => list_task(),
+        Action::Mark(status) => mark_as(status),
     }
 }
 
@@ -42,15 +43,16 @@ fn list_task() {
     let status = env::args().nth(2);
     match status {
         Some(status_string) => {
-            let status = models::Status::status_from_str(&status_string)
-                .expect("Please provide a valid status");
-            let task_list  = database::read_task_list(Some(status)).expect("Unable to read list of tasks");
+            let status =
+                Status::status_from_str(&status_string).expect("Please provide a valid status");
+            let task_list =
+                database::read_task_list(Some(status)).expect("Unable to read list of tasks");
             if task_list.is_empty() {
                 println!("No tasks found");
             } else {
                 present_task_table(task_list);
             }
-        },
+        }
         None => {
             let task_list = database::read_task_list(None).expect("Unable to read list of tasks");
             if task_list.is_empty() {
@@ -62,10 +64,16 @@ fn list_task() {
     }
 }
 
-fn present_task_table(task_list: Vec<models::Task>) {
+fn present_task_table(task_list: Vec<Task>) {
     let mut table = Table::new();
 
-    table.set_header(vec!["Id", "Description", "Status", "Created At", "Modified At"]);
+    table.set_header(vec![
+        "Id",
+        "Description",
+        "Status",
+        "Created At",
+        "Modified At",
+    ]);
     for task in task_list {
         table.add_row(vec![
             task.id.to_string(),
@@ -81,7 +89,7 @@ fn present_task_table(task_list: Vec<models::Task>) {
 
 fn update_task() {
     let args = env::args().collect::<Vec<String>>();
-    let task_id: usize = (args.get(2))
+    let task_id: usize = args.get(2)
         .expect("Please provide a task id")
         .to_string()
         .parse()
@@ -93,7 +101,7 @@ fn update_task() {
 
     let task_list = database::read_task_list(None).expect("Unable to read list of tasks");
     let task = task_list.get(task_id).expect("Please provide a task");
-    let updated_task = models::Task {
+    let updated_task = Task {
         description: description.to_string(),
         updated_at: Local::now().to_utc(),
         ..*task
@@ -102,13 +110,43 @@ fn update_task() {
     match database::update_task(updated_task) {
         Ok(()) => {
             println!("Task {task_id} updated with new description: {description}");
-        },
+        }
         Err(e) => println!("Task {task_id} could not be updated: {}", e),
     }
 }
 
 fn delete_task() {}
 
-fn mark_as(status: models::Status) {
-    print!("Mark task as {}", status);
+fn mark_as(status: Status) {
+    let args = env::args().collect::<Vec<String>>();
+
+    let task_id: usize = args.get(2)
+        .expect("Please provide a task id")
+        .to_string()
+        .parse()
+        .expect("Please provide a valid task id");
+
+    let index = task_id - 1;
+
+    match database::read_task_list(None) {
+        Ok(task_list) => {
+            if let Some(task) = task_list.get(index) {
+                let updated_task = Task {
+                    status,
+                    description: task.description.to_string(),
+                    ..*task
+                };
+
+                match database::update_task(updated_task) {
+                    Ok(()) => {
+                        println!("Task {task_id} updated successfully with new status: {status}")
+                    }
+                    Err(e) => println!("Task {task_id} could not be updated: {}", e),
+                }
+            } else {
+                println!("Task with id {task_id} could not be found");
+            }
+        }
+        Err(e) => println!("Task list could not be found: {}", e),
+    }
 }
