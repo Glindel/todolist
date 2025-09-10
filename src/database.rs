@@ -2,6 +2,7 @@ use std::fs;
 use std::fs::File;
 use std::io::{Error, Write};
 use chrono::{Local};
+use std::mem::replace;
 use crate::models;
 
 fn read_file() -> Result<Vec<models::Task>, Error> {
@@ -70,5 +71,13 @@ pub fn read_task_list(status: Option<models::Status>) -> Result<Vec<models::Task
             Ok(task_list)
         }
     }
+}
+
+pub fn update_task(task: models::Task) -> Result<(), Error> {
+    let index = task.index();
+    let mut task_list = read_task_list(None)?;
+    let _ = replace(&mut  task_list[index], task);
+
+    update_database(&task_list)
 }
 

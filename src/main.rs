@@ -3,6 +3,7 @@ pub mod models;
 
 use std::env;
 use comfy_table::Table;
+use chrono::{Local};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -64,15 +65,47 @@ fn list_task() {
 fn present_task_table(task_list: Vec<models::Task>) {
     let mut table = Table::new();
 
-    table.set_header(vec!["Id", "Description", "Status"]);
+    table.set_header(vec!["Id", "Description", "Status", "Created At", "Modified At"]);
     for task in task_list {
-        table.add_row(vec![task.id.to_string(), task.description, task.status.to_string()]);
+        table.add_row(vec![
+            task.id.to_string(),
+            task.description,
+            task.status.to_string(),
+            task.created_at.format("%Y-%m-%d").to_string(),
+            task.updated_at.format("%Y-%m-%d").to_string(),
+        ]);
     }
 
     println!("{table}");
 }
 
-fn update_task() {}
+fn update_task() {
+    let args = env::args().collect::<Vec<String>>();
+    let task_id: usize = (args.get(2))
+        .expect("Please provide a task id")
+        .to_string()
+        .parse()
+        .expect("Please provide a valid task id");
+
+    let task_id = task_id - 1;
+
+    let description = args.get(3).expect("Please provide a description");
+
+    let task_list = database::read_task_list(None).expect("Unable to read list of tasks");
+    let task = task_list.get(task_id).expect("Please provide a task");
+    let updated_task = models::Task {
+        description: description.to_string(),
+        updated_at: Local::now().to_utc(),
+        ..*task
+    };
+
+    match database::update_task(updated_task) {
+        Ok(()) => {
+            println!("Task {task_id} updated with new description: {description}");
+        },
+        Err(e) => println!("Task {task_id} could not be updated: {}", e),
+    }
+}
 
 fn delete_task() {}
 

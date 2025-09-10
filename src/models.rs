@@ -12,7 +12,13 @@ pub struct Task {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+impl Task {
+    pub fn index(&self) -> usize {
+        (self.id as usize) - 1
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Status {
     Todo,
     InProgress,
@@ -40,7 +46,7 @@ impl Display for Status {
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum Action {
     Add,
     Update,
