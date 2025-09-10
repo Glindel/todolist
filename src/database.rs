@@ -62,7 +62,7 @@ pub fn read_task_list(status: Option<models::Status>) -> Result<Vec<models::Task
         Some(status) => {
             let task_list = task_list
                 .into_iter()
-                .filter(|_task| status == status)
+                .filter(|task| task.status == status)
                 .collect();
             Ok(task_list)
         },

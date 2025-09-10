@@ -55,6 +55,7 @@ impl Action {
             "add" => Some(models::Action::Add),
             "update" => Some(models::Action::Update),
             "delete" => Some(models::Action::Delete),
+            "list" => Some(models::Action::List),
             "mark-to-do" => Some(models::Action::Mark(models::Status::Todo)),
             "mark-in-progress" => Some(models::Action::Mark(models::Status::InProgress)),
             "mark-done" => Some(models::Action::Mark(models::Status::Done)),

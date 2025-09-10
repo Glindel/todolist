@@ -2,6 +2,7 @@ mod database;
 pub mod models;
 
 use std::env;
+use comfy_table::Table;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -42,16 +43,33 @@ fn list_task() {
         Some(status_string) => {
             let status = models::Status::status_from_str(&status_string)
                 .expect("Please provide a valid status");
-            list_task_with_status(status);
+            let task_list  = database::read_task_list(Some(status)).expect("Unable to read list of tasks");
+            if task_list.is_empty() {
+                println!("No tasks found");
+            } else {
+                present_task_table(task_list);
+            }
         },
         None => {
-            
+            let task_list = database::read_task_list(None).expect("Unable to read list of tasks");
+            if task_list.is_empty() {
+                println!("No tasks found");
+            } else {
+                present_task_table(task_list)
+            }
         }
     }
 }
 
-fn list_task_with_status(status: models::Status) {
+fn present_task_table(task_list: Vec<models::Task>) {
+    let mut table = Table::new();
 
+    table.set_header(vec!["Id", "Description", "Status"]);
+    for task in task_list {
+        table.add_row(vec![task.id.to_string(), task.description, task.status.to_string()]);
+    }
+
+    println!("{table}");
 }
 
 fn update_task() {}
