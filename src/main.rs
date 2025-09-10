@@ -1,4 +1,5 @@
 mod database;
+mod tests;
 pub mod models;
 
 use chrono::Local;
@@ -11,7 +12,7 @@ fn main() {
     let action_string = args.get(1);
 
     if let Some(action_string) = action_string {
-        if let Some(action) = Action::action_from_str(action_string) {
+        if let Some(action) = Action::action_from_str(action_string.as_str()) {
             handle_action(action);
         } else {
             println!("No action found");
@@ -33,7 +34,7 @@ fn handle_action(action: Action) {
 
 fn add_task() {
     let description = env::args().nth(2).expect("Please provide a description");
-    match database::create_task(&description) {
+    match database::create_task(description.as_str()) {
         Ok(()) => println!("Task {description} created"),
         Err(e) => println!("Task {description} could not be created: {}", e),
     }
@@ -44,7 +45,7 @@ fn list_task() {
     match status {
         Some(status_string) => {
             let status =
-                Status::status_from_str(&status_string).expect("Please provide a valid status");
+                Status::status_from_str(&status_string.as_str()).expect("Please provide a valid status");
             let task_list =
                 database::read_task_list(Some(status)).expect("Unable to read list of tasks");
             if task_list.is_empty() {
@@ -115,7 +116,19 @@ fn update_task() {
     }
 }
 
-fn delete_task() {}
+fn delete_task() {
+    let task_id: usize = env::args().nth(2)
+        .expect("Please provide a task id")
+        .to_string()
+        .parse()
+        .expect("Please provide a valid task id");
+
+    let index = task_id - 1;
+    match database::delete_task(index) {
+        Ok(()) => println!("Successfully delete task with id: {task_id}"),
+        Err(e) => println!("Task {task_id} could not be deleted: {}", e)
+    }
+}
 
 fn mark_as(status: Status) {
     let args = env::args().collect::<Vec<String>>();

@@ -27,12 +27,12 @@ fn update_database(task_list: &Vec<Task>) -> Result<(), Error> {
     file.write_all(task_data.as_bytes())
 }
 
-pub fn create_task(description: &String) -> Result<(), Error> {
+pub fn create_task(description: &str) -> Result<(), Error> {
     match read_file() {
         Ok(mut task_list) => {
             let task = Task {
                 id: (task_list.iter().count() as u32)+1,
-                description: description.clone(),
+                description: description.to_string(),
                 status: Status::Todo,
                 created_at: Local::now().to_utc(),
                 updated_at: Local::now().to_utc()
@@ -46,7 +46,7 @@ pub fn create_task(description: &String) -> Result<(), Error> {
             print!("An error occurred while trying to add a task: {error}\nWe will create the database instead");
             let task = Task {
                 id: 1,
-                description: description.clone(),
+                description: description.to_string(),
                 status: Status::Todo,
                 created_at: Local::now().to_utc(),
                 updated_at: Local::now().to_utc()
@@ -79,5 +79,12 @@ pub fn update_task(task: Task) -> Result<(), Error> {
     let _ = replace(&mut  task_list[index], task);
 
     update_database(&task_list)
+}
+
+pub fn delete_task(index: usize) -> Result<(), Error> {
+    let mut task_list = read_file()?;
+    task_list.remove(index);
+    update_database(&task_list)?;
+    Ok(())
 }
 

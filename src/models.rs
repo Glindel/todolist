@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use crate::models;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Task {
@@ -26,8 +25,8 @@ pub enum Status {
 }
 
 impl Status {
-    pub fn status_from_str(string: &String) -> Option<Status> {
-        match string.as_ref() {
+    pub fn status_from_str(string: &str) -> Option<Status> {
+        match string {
             "todo" => Some(Status::Todo),
             "in-progress" => Some(Status::InProgress),
             "done" => Some(Status::Done),
@@ -46,7 +45,7 @@ impl Display for Status {
     }
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Action {
     Add,
     Update,
@@ -56,15 +55,15 @@ pub enum Action {
 }
 
 impl Action {
-    pub fn action_from_str(string: &String) -> Option<Action> {
+    pub fn action_from_str(string: &str) -> Option<Action> {
         match string.as_ref() {
-            "add" => Some(models::Action::Add),
-            "update" => Some(models::Action::Update),
-            "delete" => Some(models::Action::Delete),
-            "list" => Some(models::Action::List),
-            "mark-to-do" => Some(models::Action::Mark(models::Status::Todo)),
-            "mark-in-progress" => Some(models::Action::Mark(models::Status::InProgress)),
-            "mark-done" => Some(models::Action::Mark(models::Status::Done)),
+            "add" => Some(Action::Add),
+            "update" => Some(Action::Update),
+            "delete" => Some(Action::Delete),
+            "list" => Some(Action::List),
+            "mark-to-do" => Some(Action::Mark(Status::Todo)),
+            "mark-in-progress" => Some(Action::Mark(Status::InProgress)),
+            "mark-done" => Some(Action::Mark(Status::Done)),
             _ => None,
         }
     }
