@@ -8,7 +8,7 @@ fn main() {
     let action_string = args.get(1);
 
     if let Some(action_string) = action_string {
-        if let Some(action) = retrieve_action(action_string) {
+        if let Some(action) = models::Action::action_from_str(action_string) {
             handle_action(action);
         } else {
             println!("No action found");
@@ -18,23 +18,12 @@ fn main() {
     }
 }
 
-fn retrieve_action(string: &String) -> Option<models::Action> {
-    match string.as_ref() {
-        "add" => Some(models::Action::Add),
-        "update" => Some(models::Action::Update),
-        "delete" => Some(models::Action::Delete),
-        "mark-to-do" => Some(models::Action::Mark(models::Status::Todo)),
-        "mark-in-progress" => Some(models::Action::Mark(models::Status::InProgress)),
-        "mark-done" => Some(models::Action::Mark(models::Status::Done)),
-        _ => None,
-    }
-}
-
 fn handle_action(action: models::Action) {
     match action {
         models::Action::Add => add_task(),
         models::Action::Update => update_task(),
         models::Action::Delete => delete_task(),
+        models::Action::List => list_task(),
         models::Action::Mark(status) => mark_as(status),
     }
 }
@@ -45,6 +34,24 @@ fn add_task() {
         Ok(()) => println!("Task {description} created"),
         Err(e) => println!("Task {description} could not be created: {}", e),
     }
+}
+
+fn list_task() {
+    let status = env::args().nth(2);
+    match status {
+        Some(status_string) => {
+            let status = models::Status::status_from_str(&status_string)
+                .expect("Please provide a valid status");
+            list_task_with_status(status);
+        },
+        None => {
+            
+        }
+    }
+}
+
+fn list_task_with_status(status: models::Status) {
+
 }
 
 fn update_task() {}

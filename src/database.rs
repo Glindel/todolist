@@ -56,3 +56,19 @@ pub fn create_task(description: &String) -> Result<(), Error> {
     }
 }
 
+pub fn read_task_list(status: Option<models::Status>) -> Result<Vec<models::Task>, Error> {
+    let task_list = read_file()?;
+    match status {
+        Some(status) => {
+            let task_list = task_list
+                .into_iter()
+                .filter(|_task| status == status)
+                .collect();
+            Ok(task_list)
+        },
+        None => {
+            Ok(task_list)
+        }
+    }
+}
+
