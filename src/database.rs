@@ -44,7 +44,11 @@ pub fn create_task(description: &str) -> Result<(), Error> {
     }
 }
 
-pub fn read_task_list(status: Option<Status>) -> Result<Vec<Task>, Error> {
+pub fn read_task_list() -> Result<TaskList, Error> {
+    read_file()
+}
+
+pub fn task_list_with_status(status: Option<Status>) -> Result<Vec<Task>, Error> {
     let task_list = read_file()?;
     match status {
         Some(status) => {

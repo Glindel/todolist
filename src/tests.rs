@@ -41,23 +41,34 @@ mod test_models {
 #[cfg(test)]
 mod test_database {
     use serial_test::serial;
+    use std::fs;
     use crate::database;
+
+    fn purge_database() {
+        match fs::remove_file("database.json") {
+            Ok(()) => println!("Database purged"),
+            Err(_) => println!("No database")
+        }
+    }
 
     #[test]
     #[serial]
     fn test_create_and_read_task() {
+        purge_database();
         database::create_task("Unit test task").unwrap();
-        let task_list = database::read_task_list(None).unwrap();
-        let task = task_list.last().unwrap();
+        let task_list = database::read_task_list().unwrap();
+        let task = task_list.get(1).unwrap();
 
         assert_eq!(task.description(), "Unit test task");
+        purge_database();
     }
 
     #[test]
     #[serial]
     fn test_update_task() {
+        purge_database();
         database::create_task("Unit test task").unwrap();
-        let task_list = database::read_task_list(None).unwrap();
+        let task_list = database::task_list_with_status(None).unwrap();
         let task_count = task_list.len();
         let task = task_list.last().unwrap();
 
@@ -69,21 +80,24 @@ mod test_database {
 
         database::update_task(updated_task).unwrap();
 
-        let task_list = database::read_task_list(None).unwrap();
+        let task_list = database::task_list_with_status(None).unwrap();
 
         assert_eq!(task_list.len(), task_count);
         assert_eq!(task_list.last().unwrap().description(), "Unit test update task");
+        purge_database();
     }
 
     #[test]
     #[serial]
     fn test_delete_task() {
+        purge_database();
         database::create_task("Unit test delete task").unwrap();
-        let task_list = database::read_task_list(None).unwrap();
+        let task_list = database::task_list_with_status(None).unwrap();
         let task_count = task_list.len() as u32;
 
         database::delete_task(task_count).unwrap();
-        let task_list = database::read_task_list(None).unwrap();
+        let task_list = database::task_list_with_status(None).unwrap();
         assert!(task_list.len() < task_count as usize);
+        purge_database();
     }
 }

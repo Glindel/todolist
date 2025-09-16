@@ -46,7 +46,7 @@ fn list_task() {
             let status =
                 Status::status_from_str(&status_string.as_str()).expect("Please provide a valid status");
             let task_list =
-                database::read_task_list(Some(status)).expect("Unable to read list of tasks");
+                database::task_list_with_status(Some(status)).expect("Unable to read list of tasks");
             if task_list.is_empty() {
                 println!("No tasks found");
             } else {
@@ -54,7 +54,7 @@ fn list_task() {
             }
         }
         None => {
-            let task_list = database::read_task_list(None).expect("Unable to read list of tasks");
+            let task_list = database::task_list_with_status(None).expect("Unable to read list of tasks");
             if task_list.is_empty() {
                 println!("No tasks found");
             } else {
@@ -89,17 +89,15 @@ fn present_task_table(task_list: Vec<Task>) {
 
 fn update_task() {
     let args = env::args().collect::<Vec<String>>();
-    let task_id: usize = args.get(2)
+    let task_id: u32 = args.get(2)
         .expect("Please provide a task id")
         .to_string()
         .parse()
         .expect("Please provide a valid task id");
 
-    let task_id = task_id - 1;
-
     let description = args.get(3).expect("Please provide a description");
 
-    let task_list = database::read_task_list(None).expect("Unable to read list of tasks");
+    let task_list = database::read_task_list().expect("Unable to read list of tasks");
     let task = task_list.get(task_id).expect("Please provide a task");
 
     let mut updated_task = task.clone();
@@ -129,17 +127,15 @@ fn delete_task() {
 fn mark_as(status: Status) {
     let args = env::args().collect::<Vec<String>>();
 
-    let task_id: usize = args.get(2)
+    let task_id: u32 = args.get(2)
         .expect("Please provide a task id")
         .to_string()
         .parse()
         .expect("Please provide a valid task id");
 
-    let index = task_id - 1;
-
-    match database::read_task_list(None) {
+    match database::read_task_list() {
         Ok(task_list) => {
-            if let Some(task) = task_list.get(index) {
+            if let Some(task) = task_list.get(task_id) {
                 let mut updated_task = task.clone();
                 updated_task.set_status(status);
 
