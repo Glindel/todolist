@@ -2,7 +2,6 @@ mod database;
 mod tests;
 pub mod models;
 
-use chrono::Local;
 use comfy_table::Table;
 use models::{Action, Status, Task};
 use std::env;
@@ -77,11 +76,11 @@ fn present_task_table(task_list: Vec<Task>) {
     ]);
     for task in task_list {
         table.add_row(vec![
-            task.id.to_string(),
-            task.description,
-            task.status.to_string(),
-            task.created_at.format("%Y-%m-%d").to_string(),
-            task.updated_at.format("%Y-%m-%d").to_string(),
+            task.id().to_string(),
+            task.description().to_string(),
+            task.status().to_string(),
+            task.created_at().format("%Y-%m-%d").to_string(),
+            task.updated_at().format("%Y-%m-%d").to_string(),
         ]);
     }
 
@@ -102,11 +101,9 @@ fn update_task() {
 
     let task_list = database::read_task_list(None).expect("Unable to read list of tasks");
     let task = task_list.get(task_id).expect("Please provide a task");
-    let updated_task = Task {
-        description: description.to_string(),
-        updated_at: Local::now().to_utc(),
-        ..*task
-    };
+
+    let mut updated_task = task.clone();
+    updated_task.set_description(description.clone());
 
     match database::update_task(updated_task) {
         Ok(()) => {
@@ -117,14 +114,13 @@ fn update_task() {
 }
 
 fn delete_task() {
-    let task_id: usize = env::args().nth(2)
+    let task_id: u32 = env::args().nth(2)
         .expect("Please provide a task id")
         .to_string()
         .parse()
         .expect("Please provide a valid task id");
 
-    let index = task_id - 1;
-    match database::delete_task(index) {
+    match database::delete_task(task_id) {
         Ok(()) => println!("Successfully delete task with id: {task_id}"),
         Err(e) => println!("Task {task_id} could not be deleted: {}", e)
     }
@@ -144,11 +140,8 @@ fn mark_as(status: Status) {
     match database::read_task_list(None) {
         Ok(task_list) => {
             if let Some(task) = task_list.get(index) {
-                let updated_task = Task {
-                    status,
-                    description: task.description.to_string(),
-                    ..*task
-                };
+                let mut updated_task = task.clone();
+                updated_task.set_status(status);
 
                 match database::update_task(updated_task) {
                     Ok(()) => {

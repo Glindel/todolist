@@ -1,19 +1,102 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, Local};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
+use std::mem::replace;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Task {
-    pub id: u32,
-    pub description: String,
-    pub status: Status,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    id: u32,
+    description: String,
+    status: Status,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
 }
 
 impl Task {
-    pub fn index(&self) -> usize {
-        (self.id as usize) - 1
+    pub fn new(id: u32, description: String) -> Self {
+        Task {
+            id,
+            description,
+            status: Status::Todo,
+            created_at: Local::now().to_utc(),
+            updated_at: Local::now().to_utc()
+        }
+    }
+
+    pub fn id(&self) -> u32 {
+        self.id
+    }
+
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+
+    pub fn status(&self) -> &Status {
+        &self.status
+    }
+
+    pub fn created_at(&self) -> &DateTime<Utc> {
+        &self.created_at
+    }
+
+    pub fn updated_at(&self) -> &DateTime<Utc> {
+        &self.updated_at
+    }
+
+    pub fn set_description(&mut self, description: String) {
+        self.description = description;
+    }
+
+    pub fn set_status(&mut self, status: Status) {
+        self.status = status;
+    }
+
+    pub fn set_updated_at(&mut self, date: DateTime<Utc>) {
+        self.updated_at = date;
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TaskList {
+    task_list: Vec<Task>,
+    next_id: u32
+}
+
+impl TaskList {
+    pub fn new() -> Self {
+        TaskList { task_list: vec![], next_id: 1 }
+    }
+
+    pub fn add(&mut self, description: String) {
+        self.task_list.push(Task::new(self.next_id, description));
+        self.next_id = self.next_id + 1; 
+    }
+
+    pub fn get(&self, id: u32) -> Option<&Task> {
+        let index = (id - 1) as usize;
+        self.task_list.get(index)
+    }
+
+    pub fn update(&mut self, task: Task) {
+        let index = self.task_list.iter().position(|t| t.id() == task.id()).expect("The task doesn't exist in the list");
+        let _ = replace(&mut self.task_list[index], task);
+    }
+
+    pub fn remove(&mut self, id: u32) {
+        let index = (id - 1) as usize;
+        self.task_list.remove(index);
+    }
+
+    pub fn all_tasks(&self) -> Vec<Task> {
+        self.task_list.clone()
+    }
+
+    pub fn with_status(&self, status: Status) -> Vec<Task> {
+        self.task_list
+        .clone()
+        .into_iter()
+        .filter(|task| *task.status() == status)
+        .collect()
     }
 }
 

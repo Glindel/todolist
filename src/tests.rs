@@ -41,7 +41,6 @@ mod test_models {
 #[cfg(test)]
 mod test_database {
     use serial_test::serial;
-    use crate::models::Task;
     use crate::database;
 
     #[test]
@@ -51,7 +50,7 @@ mod test_database {
         let task_list = database::read_task_list(None).unwrap();
         let task = task_list.last().unwrap();
 
-        assert_eq!(task.description, "Unit test task");
+        assert_eq!(task.description(), "Unit test task");
     }
 
     #[test]
@@ -61,20 +60,19 @@ mod test_database {
         let task_list = database::read_task_list(None).unwrap();
         let task_count = task_list.len();
         let task = task_list.last().unwrap();
-        let updated_task = Task {
-            description: "Unit test update task".to_string(),
-            ..*task
-        };
 
-        assert_eq!(task.description, "Unit test task");
-        assert_eq!(updated_task.description, "Unit test update task");
+        let mut updated_task = task.clone();
+        updated_task.set_description("Unit test update task".to_string());
+
+        assert_eq!(task.description(), "Unit test task");
+        assert_eq!(updated_task.description(), "Unit test update task");
 
         database::update_task(updated_task).unwrap();
 
         let task_list = database::read_task_list(None).unwrap();
 
         assert_eq!(task_list.len(), task_count);
-        assert_eq!(task_list.last().unwrap().description, "Unit test update task");
+        assert_eq!(task_list.last().unwrap().description(), "Unit test update task");
     }
 
     #[test]
@@ -82,10 +80,10 @@ mod test_database {
     fn test_delete_task() {
         database::create_task("Unit test delete task").unwrap();
         let task_list = database::read_task_list(None).unwrap();
-        let task_count = task_list.len();
+        let task_count = task_list.len() as u32;
 
-        database::delete_task(task_count-1).unwrap();
+        database::delete_task(task_count).unwrap();
         let task_list = database::read_task_list(None).unwrap();
-        assert!(task_list.len() < task_count);
+        assert!(task_list.len() < task_count as usize);
     }
 }
