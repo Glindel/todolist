@@ -34,8 +34,8 @@ fn handle_action(action: Action) {
 fn add_task() {
     let description = env::args().nth(2).expect("Please provide a description");
     match database::create_task(description.as_str()) {
-        Ok(()) => println!("Task {description} created"),
-        Err(e) => println!("Task {description} could not be created: {}", e),
+        Ok(()) => println!("Task \"{description}\" created"),
+        Err(e) => println!("Task \"{description}\" could not be created: {}", e),
     }
 }
 

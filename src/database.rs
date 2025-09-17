@@ -35,9 +35,11 @@ pub fn create_task(description: &str) -> Result<(), Error> {
             Ok(())
         }
         Err(error) => {
-            print!(
-                "An error occurred while trying to add a task: {error}\nWe will create the database instead"
+            println!(
+                "An error occurred while trying to add a task: {error}"
             );
+            println!("------------------------");
+            println!("We will create the database instead");
 
             create_database_for_task(description.to_string())
         }
