@@ -1,5 +1,7 @@
 # 📝 task-cli
 
+[roadmap.sh project](https://roadmap.sh/projects/task-tracker)
+
 `task-cli` is a **Rust-based CLI application** to manage your tasks directly from the terminal.  
 Fast, simple, and effective, it helps you keep track of tasks with different statuses.
 
